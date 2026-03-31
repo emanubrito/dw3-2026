@@ -1,0 +1,30 @@
+### LISTAR
+GET http://localhost:3000/tarefas
+
+### FILTRO
+GET http://localhost:3000/tarefas?concluido=false
+
+### BUSCA
+GET http://localhost:3000/tarefas?busca=estudar
+
+### CRIAR
+POST http://localhost:3000/tarefas
+Content-Type: application/json
+
+{
+  "descricao": "Nova tarefa"
+}
+
+### ERRO (sem descrição)
+POST http://localhost:3000/tarefas
+Content-Type: application/json
+
+{
+  "concluido": false
+}
+
+### TOGGLE (alternar concluído)
+PATCH http://localhost:3000/tarefas/1/concluir
+
+### RESUMO
+GET http://localhost:3000/tarefas/resumo
