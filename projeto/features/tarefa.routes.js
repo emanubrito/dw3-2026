@@ -1,6 +1,6 @@
 // @file: src/features/tarefas/tarefa.routes.js
 
-import { TarefaRepository } from './tarefa.repository.js'
+import TarefaRepository from './tarefa.repository.js'
 import { TarefaService } from './tarefa.service.js'
 import { TarefaController } from './tarefa.controller.js'
 
@@ -24,6 +24,10 @@ export default async function tarefaRoutes(server) {
 
   server.post('/tarefas', (request, reply) =>
     controller.criar(request, reply)
+  )
+
+  server.get('/tarefas/resumo', (request, reply) =>
+    controller.resumo(request, reply)
   )
 
   server.get('/tarefas/:id', (request, reply) =>

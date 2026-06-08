@@ -41,4 +41,9 @@ export class TarefaController {
     await this.service.removerTarefa(id)
     return reply.status(204).send()
   }
+
+  async resumo(request, reply) {
+    const resumo = await this.service.resumoTarefas()
+    return reply.send(resumo)
+  }
 }

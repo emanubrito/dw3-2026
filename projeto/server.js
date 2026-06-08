@@ -4,6 +4,7 @@ import tarefaRoutes from './features//tarefa.routes.js'
 import { AppError } from './errors/AppError.js'
 import produtoRoutes from "./modules/produtos/produto.routes.js";
 import { errorHandler } from "./shared/http/error-handler.js";
+import 'dotenv/config'
 
 const server = Fastify({ logger: true })
 
