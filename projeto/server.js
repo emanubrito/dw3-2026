@@ -1,26 +1,24 @@
-// @file: src/server.js
-import Fastify from 'fastify'
-import tarefaRoutes from './features//tarefa.routes.js'
-import { AppError } from './errors/AppError.js'
-import produtoRoutes from "./modules/produtos/produto.routes.js";
-import { errorHandler } from "./shared/http/error-handler.js";
 import 'dotenv/config'
+import Fastify from 'fastify'
+
+import tarefaRoutes from './features/tarefa.routes.js'
+import pool from './database/pool.js'
 
 const server = Fastify({ logger: true })
-
-server.register(produtoRoutes);
-
-server.setErrorHandler(errorHandler);
 
 server.register(tarefaRoutes)
 
 const start = async () => {
   try {
+    await pool.query('SELECT 1')
+    console.log('Conectado ao PostgreSQL com sucesso')
+
     await server.listen({ port: 3000 })
 
-    console.log("Servidor rodando")
+    console.log('Servidor rodando')
   } catch (err) {
-    console.error(err)
+    console.error('Falha ao iniciar a aplicação:', err)
+    process.exit(1)
   }
 }
 

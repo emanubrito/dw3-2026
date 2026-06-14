@@ -1,0 +1,19 @@
+### Listar tarefas
+GET http://localhost:3000/tarefas
+
+
+### Criar tarefa
+POST http://localhost:3000/tarefas
+Content-Type: application/json
+
+{
+  "descricao": "Testar API usando Pool"
+}
+
+
+### Listar novamente
+GET http://localhost:3000/tarefas
+
+
+### Resumo
+GET http://localhost:3000/tarefas/resumo

@@ -1,59 +1,109 @@
-// @file: src/features/tarefas/tarefa.service.js
-import { AppError } from '../errors/AppError.js'
+// @file: src/features/tarefa.repository.js
+import pool from '../database/pool.js'
 
-export class TarefaService {
-  constructor(repository) {
-    this.repository = repository
+export class TarefaRepository {
+  async buscarTodos(filtros = {}) {
+    const condicoes = []
+    const valores = []
+
+    if (filtros.busca) {
+      valores.push(`%${filtros.busca}%`)
+      condicoes.push(`descricao ILIKE $${valores.length}`)
+    }
+
+    if (filtros.status) {
+      const concluido = filtros.status === 'concluida'
+      valores.push(concluido)
+      condicoes.push(`concluido = $${valores.length}`)
+    }
+
+    let sql = `
+      SELECT id, descricao, concluido, criada_em
+      FROM tarefas
+    `
+
+    if (condicoes.length > 0) {
+      sql += ` WHERE ${condicoes.join(' AND ')}`
+    }
+
+    sql += ` ORDER BY id`
+
+    const resultado = await pool.query(sql, valores)
+    return resultado.rows
   }
 
   async buscarPorId(id) {
-    const tarefa = await this.repository.buscarPorId(id)
-    if (!tarefa) {
-      // 404: Not Found (Não Encontrado)
-      throw new AppError('Tarefa não encontrada', 404)
-    }
-    return tarefa
+    const resultado = await pool.query(
+      `
+        SELECT id, descricao, concluido, criada_em
+        FROM tarefas
+        WHERE id = $1
+      `,
+      [id]
+    )
+
+    return resultado.rows[0] ?? null
   }
 
-  async criarTarefa(dados) {
-    if (!dados.titulo || dados.titulo.trim() === '') {
-      throw new AppError('O título é obrigatório', 400)
-    }
+  async salvar(tarefa) {
+    const resultado = await pool.query(
+      `
+        INSERT INTO tarefas (descricao, concluido)
+        VALUES ($1, $2)
+        RETURNING id, descricao, concluido, criada_em
+      `,
+      [tarefa.descricao, tarefa.concluido]
+    )
 
-    const tarefas = await this.repository.listarTodos()
-    const tituloJaExiste = tarefas.some(t => t.titulo.toLowerCase() === dados.titulo.toLowerCase().trim())
-
-    if (tituloJaExiste) {
-      throw new AppError('Já existe uma tarefa com esse título', 400)
-    }
-
-    return this.repository.salvar({ ...dados, status: 'pendente' })
+    return resultado.rows[0]
   }
 
-  async atualizarTarefa(id, dados) {
-    const tarefa = await this.buscarPorId(id) // Se não achar, o método acima já lança o AppError 404
+  async atualizar(id, dadosAtualizados) {
+    const tarefaAtual = await this.buscarPorId(id)
 
-    if (tarefa.status === 'concluida') {
-      throw new AppError('Não é possível atualizar uma tarefa já concluída', 400)
+    if (!tarefaAtual) return null
+
+    const tarefaFinal = {
+      ...tarefaAtual,
+      ...dadosAtualizados,
+      id: tarefaAtual.id
     }
 
-    return this.repository.atualizar(id, dados)
+    const resultado = await pool.query(
+      `
+        UPDATE tarefas
+        SET descricao = $1,
+            concluido = $2
+        WHERE id = $3
+        RETURNING id, descricao, concluido, criada_em
+      `,
+      [tarefaFinal.descricao, tarefaFinal.concluido, id]
+    )
+
+    return resultado.rows[0] ?? null
   }
 
-  async concluirTarefa(id) {
-    const tarefa = await this.buscarPorId(id)
+  async remover(id) {
+    const resultado = await pool.query(
+      `
+        DELETE FROM tarefas
+        WHERE id = $1
+      `,
+      [id]
+    )
 
-    const novoStatus = tarefa.status === 'concluida' ? 'pendente' : 'concluida'
-    return this.repository.atualizar(id, { status: novoStatus })
+    return resultado.rowCount > 0
   }
 
-  async removerTarefa(id) {
-    const tarefa = await this.buscarPorId(id)
+  async resumo() {
+    const resultado = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE concluido = true)::int AS concluidas,
+        COUNT(*) FILTER (WHERE concluido = false)::int AS pendentes
+      FROM tarefas
+    `)
 
-    if (tarefa.status === 'concluida') {
-      throw new AppError('Não é possível remover uma tarefa já concluída', 400)
-    }
-
-    return this.repository.remover(id)
+    return resultado.rows[0]
   }
 }

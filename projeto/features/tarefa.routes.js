@@ -1,6 +1,6 @@
 // @file: src/features/tarefas/tarefa.routes.js
 
-import TarefaRepository from './tarefa.repository.js'
+import { TarefaRepository } from './tarefa.repository.js'
 import { TarefaService } from './tarefa.service.js'
 import { TarefaController } from './tarefa.controller.js'
 

@@ -1,3 +1,4 @@
+// @file: src/features/tarefa.service.js
 import { AppError } from '../errors/AppError.js'
 
 export class TarefaService {
@@ -25,6 +26,7 @@ export class TarefaService {
     }
 
     const tarefas = await this.repository.buscarTodos()
+
     const descricaoJaExiste = tarefas.some(
       t => t.descricao.toLowerCase() === dados.descricao.toLowerCase().trim()
     )
