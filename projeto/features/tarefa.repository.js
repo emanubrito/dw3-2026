@@ -8,25 +8,33 @@ export class TarefaRepository {
 
     if (filtros.busca) {
       valores.push(`%${filtros.busca}%`)
-      condicoes.push(`descricao ILIKE $${valores.length}`)
+      condicoes.push(`t.descricao ILIKE $${valores.length}`)
     }
 
     if (filtros.status) {
       const concluido = filtros.status === 'concluida'
       valores.push(concluido)
-      condicoes.push(`concluido = $${valores.length}`)
+      condicoes.push(`t.concluido = $${valores.length}`)
     }
 
     let sql = `
-      SELECT id, descricao, concluido, criada_em
-      FROM tarefas
+      SELECT
+        t.id,
+        t.descricao,
+        t.concluido,
+        t.criada_em,
+        t.projeto_id,
+        p.nome AS projeto_nome
+      FROM tarefas t
+      LEFT JOIN projetos p
+        ON p.id = t.projeto_id
     `
 
     if (condicoes.length > 0) {
       sql += ` WHERE ${condicoes.join(' AND ')}`
     }
 
-    sql += ` ORDER BY id`
+    sql += ` ORDER BY t.id`
 
     const resultado = await pool.query(sql, valores)
     return resultado.rows
@@ -35,9 +43,17 @@ export class TarefaRepository {
   async buscarPorId(id) {
     const resultado = await pool.query(
       `
-        SELECT id, descricao, concluido, criada_em
-        FROM tarefas
-        WHERE id = $1
+        SELECT
+          t.id,
+          t.descricao,
+          t.concluido,
+          t.criada_em,
+          t.projeto_id,
+          p.nome AS projeto_nome
+        FROM tarefas t
+        LEFT JOIN projetos p
+          ON p.id = t.projeto_id
+        WHERE t.id = $1
       `,
       [id]
     )
@@ -48,11 +64,11 @@ export class TarefaRepository {
   async salvar(tarefa) {
     const resultado = await pool.query(
       `
-        INSERT INTO tarefas (descricao, concluido)
-        VALUES ($1, $2)
-        RETURNING id, descricao, concluido, criada_em
+        INSERT INTO tarefas (descricao, concluido, projeto_id)
+        VALUES ($1, $2, $3)
+        RETURNING id, descricao, concluido, criada_em, projeto_id
       `,
-      [tarefa.descricao, tarefa.concluido]
+      [tarefa.descricao, tarefa.concluido, tarefa.projetoId]
     )
 
     return resultado.rows[0]
@@ -73,11 +89,17 @@ export class TarefaRepository {
       `
         UPDATE tarefas
         SET descricao = $1,
-            concluido = $2
-        WHERE id = $3
-        RETURNING id, descricao, concluido, criada_em
+            concluido = $2,
+            projeto_id = $3
+        WHERE id = $4
+        RETURNING id, descricao, concluido, criada_em, projeto_id
       `,
-      [tarefaFinal.descricao, tarefaFinal.concluido, id]
+      [
+        tarefaFinal.descricao,
+        tarefaFinal.concluido,
+        tarefaFinal.projetoId ?? tarefaFinal.projeto_id,
+        id
+      ]
     )
 
     return resultado.rows[0] ?? null

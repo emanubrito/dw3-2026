@@ -25,6 +25,10 @@ export class TarefaService {
       throw new AppError('A descrição é obrigatória', 400)
     }
 
+    if (!dados.projetoId) {
+      throw new AppError('O projeto é obrigatório', 400)
+    }
+
     const tarefas = await this.repository.buscarTodos()
 
     const descricaoJaExiste = tarefas.some(
@@ -37,7 +41,8 @@ export class TarefaService {
 
     return this.repository.salvar({
       descricao: dados.descricao.trim(),
-      concluido: false
+      concluido: false,
+      projetoId: dados.projetoId
     })
   }
 
@@ -45,7 +50,10 @@ export class TarefaService {
     const tarefa = await this.buscarPorId(id)
 
     if (tarefa.concluido) {
-      throw new AppError('Não é possível atualizar uma tarefa já concluída', 400)
+      throw new AppError(
+        'Não é possível atualizar uma tarefa já concluída',
+        400
+      )
     }
 
     return this.repository.atualizar(id, dados)
@@ -63,7 +71,10 @@ export class TarefaService {
     const tarefa = await this.buscarPorId(id)
 
     if (tarefa.concluido) {
-      throw new AppError('Não é possível remover uma tarefa já concluída', 400)
+      throw new AppError(
+        'Não é possível remover uma tarefa já concluída',
+        400
+      )
     }
 
     return this.repository.remover(id)
