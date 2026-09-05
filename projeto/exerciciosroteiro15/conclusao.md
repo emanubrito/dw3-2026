@@ -1,0 +1,2 @@
+# Conclusão: 
+O Drizzle facilita o acesso ao banco de dados porque permite realizar operações usando JavaScript e o schema das tabelas. Porém, ele não substitui o conhecimento de SQL, pois as operações realizadas pelo ORM continuam sendo traduzidas para consultas no banco. O SQL puro oferece maior proximidade e controle sobre o banco, enquanto o Drizzle oferece mais praticidade e integração com a aplicação. Por isso, os dois podem ser utilizados em conjunto.
